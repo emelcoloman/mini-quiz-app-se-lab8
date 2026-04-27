@@ -1,0 +1,18 @@
+[
+  {
+    "type": "multiple_choice",
+    "prompt": "Which design pattern creates objects?",
+    "options": ["Observer", "Factory Method", "Facade", "Composite"],
+    "answer": "Factory Method"
+  },
+  {
+    "type": "true_false",
+    "prompt": "Composite is a structural pattern.",
+    "answer": "true"
+  },
+  {
+    "type": "short_answer",
+    "prompt": "What pattern hides subsystem complexity?",
+    "answer": "Facade"
+  }
+]
