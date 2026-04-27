@@ -2,56 +2,116 @@ let loadedQuestions = [];
 
 async function loadQuiz() {
 
-    const response = await fetch('/questions');
-    loadedQuestions = await response.json();
+    try {
 
-    const container = document.getElementById('quiz');
-    container.innerHTML = '';
+        const response = await fetch('/questions');
 
-    loadedQuestions.forEach((question, index) => {
+        if (!response.ok) {
+            throw new Error('Failed to load questions');
+        }
 
-        const card = document.createElement('div');
-        card.className = 'question-card';
+        loadedQuestions = await response.json();
 
-        let html = `<h3>${index + 1}. ${question.prompt}</h3>`;
+        const container = document.getElementById('quiz');
+        container.innerHTML = '';
 
-        if (question.type === 'multiple_choice') {
+        loadedQuestions.forEach((question, index) => {
 
-            question.options.forEach(option => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+
+            let html = `<h3>${index + 1}. ${question.prompt}</h3>`;
+
+            if (question.type === 'multiple_choice') {
+
+                question.options.forEach(option => {
+
+                    html += `
+                        <label class="option">
+                            <input type="radio" name="q${index}" value="${option}">
+                            ${option}
+                        </label>
+                    `;
+                });
+            }
+
+            else if (question.type === 'true_false') {
+
                 html += `
                     <label class="option">
-                        <input type="radio" name="q${index}" value="${option}">
-                        ${option}
+                        <input type="radio" name="q${index}" value="true">
+                        True
+                    </label>
+
+                    <label class="option">
+                        <input type="radio" name="q${index}" value="false">
+                        False
                     </label>
                 `;
-            });
-        }
+            }
 
-        else if (question.type === 'true_false') {
+            else if (question.type === 'short_answer') {
 
-            html += `
-                <label class="option">
-                    <input type="radio" name="q${index}" value="true">
-                    True
-                </label>
+                html += `
+                    <input type="text" name="q${index}" placeholder="Type your answer">
+                `;
+            }
 
-                <label class="option">
-                    <input type="radio" name="q${index}" value="false">
-                    False
-                </label>
-            `;
-        }
+            card.innerHTML = html;
+            container.appendChild(card);
+        });
 
-        else if (question.type === 'short_answer') {
+        document.getElementById('submit-btn').style.display = 'inline-block';
 
-            html += `
-                <input type="text" name="q${index}">
-            `;
-        }
+    } catch (error) {
 
-        card.innerHTML = html;
-        container.appendChild(card);
-    });
+        console.error(error);
 
-    document.getElementById('submit-btn').style.display = 'inline-block';
+        document.getElementById('quiz').innerHTML = `
+            <p>Failed to load quiz questions.</p>
+        `;
+    }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const form = document.getElementById('quiz-form');
+
+    form.addEventListener('submit', function(e) {
+
+        e.preventDefault();
+
+        let score = 0;
+
+        loadedQuestions.forEach((question, index) => {
+
+            let userAnswer = "";
+
+            const selectedRadio = document.querySelector(`input[name="q${index}"]:checked`);
+            const textInput = document.querySelector(`input[name="q${index}"][type="text"]`);
+
+            if (selectedRadio) {
+                userAnswer = selectedRadio.value;
+            }
+
+            else if (textInput) {
+                userAnswer = textInput.value;
+            }
+
+            if (
+                userAnswer.trim().toLowerCase() ===
+                question.answer.trim().toLowerCase()
+            ) {
+                score++;
+            }
+        });
+
+        const percentage = ((score / loadedQuestions.length) * 100).toFixed(2);
+
+        document.getElementById('result').innerHTML = `
+            <h2>Quiz Results</h2>
+            <p>Score: ${score}/${loadedQuestions.length}</p>
+            <p>Percentage: ${percentage}%</p>
+        `;
+    });
+});
